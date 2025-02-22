@@ -1,0 +1,82 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: jd2
+spec:
+  interval: 5m
+  chart:
+    spec:
+      chart: app-template
+      version: 3.7.1
+      sourceRef:
+        kind: HelmRepository
+        name: bjw-s-charts
+        namespace: flux-system
+  dependsOn:
+    - name: ingress-nginx-external
+      namespace: networking
+    - name: csi-driver-smb
+      namespace: kube-system
+    - name: longhorn
+      namespace: longhorn-system
+    - name: pod-gateway-vpn
+      namespace: networking
+  values:
+    controllers:
+      main:
+        containers:
+          main:
+            image:
+              repository: jlesage/jdownloader-2
+              tag: v25.02.1@sha256:a597e25a5be386cac5519f2fc705eadb786727f9f0f2c7440fb5585efa41973f
+              pullPolicy: IfNotPresent
+            env:
+              KEEP_APP_RUNNING: true
+            probes:
+              liveness:
+                enabled: true
+              readiness:
+                enabled: true
+              startup:
+                enabled: true
+                spec:
+                  failureThreshold: 30
+                  periodSeconds: 5
+    service:
+      main:
+        controller: main
+        ports:
+          http:
+            port: 5800
+    ingress:
+      main:
+        className: "nginx-external"
+        annotations:
+          external-dns.alpha.kubernetes.io/target: "${SECRET_GATEWAY}"
+          kubernetes.io/tls-acme: "true"
+          nginx.ingress.kubernetes.io/auth-url: http://authelia.networking.svc.cluster.local/api/authz/auth-request
+          nginx.ingress.kubernetes.io/auth-signin: https://auth.${SECRET_DOMAIN}
+        hosts:
+        - host: jd2.${SECRET_DOMAIN}
+          paths:
+          - path: /
+            service:
+              identifier: main
+              port: http
+        tls:
+        - secretName: jd2-tls
+          hosts:
+          - jd2.${SECRET_DOMAIN}
+    persistence:
+      config:
+        type: persistentVolumeClaim
+        size: 1Gi
+        storageClass: longhorn-backup
+        accessMode: ReadWriteOnce
+        globalMounts:
+          - path: "/config"
+      output:
+        existingClaim: jd2-output
+        globalMounts:
+          - path: "/output"

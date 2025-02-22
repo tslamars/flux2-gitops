@@ -1,0 +1,15 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- ../namespaces.yaml
+- ../bind9.yaml
+- ../blocky.yaml
+- ../flux-system.yaml
+- ../local-path-provisioner.yaml
+- ../metallb.yaml
+- ../reloader.yaml
+- ../system-upgrade-controller.yaml
+
+patchesStrategicMerge:
+- bind9.yaml

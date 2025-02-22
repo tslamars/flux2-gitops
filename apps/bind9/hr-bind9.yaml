@@ -1,0 +1,91 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: bind9
+spec:
+  interval: 5m
+  chart:
+    spec:
+      chart: app-template
+      version: 3.7.1
+      sourceRef:
+        kind: HelmRepository
+        name: bjw-s-charts
+        namespace: flux-system
+  dependsOn:
+    - name: metallb
+      namespace: metallb-system
+  values:
+    defaultPodOptions:
+      securityContext:
+        fsGroup: 101
+    controllers:
+      main:
+        annotations:
+          reloader.stakater.com/auto: "true"
+        containers:
+          main:
+            image:
+              repository: ubuntu/bind9
+              tag: 9.18-22.04_beta@sha256:0e9b3407204295e7792fca4516b1c3399601b077919db9fc1ae0fb50385c8057
+            probes:
+              liveness:
+                enabled: true
+              readiness:
+                enabled: true
+              startup:
+                enabled: true
+                spec:
+                  failureThreshold: 30
+                  periodSeconds: 5
+        initContainers:
+          create-zone:
+            image:
+              repository: alpine
+              tag: 3.21@sha256:a8560b36e8b8210634f77d9f7f9efd7ffa463e380b75e2e74aff4511df3ef88c
+            command: 
+            - /bin/sh
+            - -c
+            - |
+              cp -n /tmp/*.zone /var/lib/bind/ && chown 101:101 /var/lib/bind/*.zone
+    service:
+      main:
+        controller: main
+        type: LoadBalancer
+        loadBalancerIP: "${LB_IP_BIND_SVC}"
+        externalTrafficPolicy: Local
+        ports:
+          dns-tcp:
+            port: 53
+            protocol: TCP
+          dns-udp:
+            port: 53
+            protocol: UDP
+    persistence:
+      config:
+        type: secret
+        name: bind9-secrets
+        globalMounts:
+          - path: /etc/bind/named.conf
+            subPath: named-${CLUSTER_BIND9_ROLE}.conf
+            readOnly: true
+          - path: /etc/bind/tsig.keys
+            subPath: tsig.keys
+            readOnly: true
+          - path: /tmp/domain.zone
+            subPath: domain.zone
+            readOnly: true
+          - path: /tmp/domain2.zone
+            subPath: domain2.zone
+            readOnly: true
+      data:
+        existingClaim: bind9-data
+        globalMounts:
+          - path: /var/lib/bind
+      cache:
+        type: persistentVolumeClaim
+        accessMode: ReadWriteOnce
+        size: 1Gi
+        globalMounts:
+          - path: /var/cache/bind

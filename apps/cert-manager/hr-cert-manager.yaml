@@ -1,0 +1,37 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: cert-manager
+spec:
+  interval: 5m
+  chart:
+    spec:
+      chart: cert-manager
+      version: v1.17.1
+      sourceRef:
+        kind: HelmRepository
+        name: jetstack-charts
+        namespace: flux-system
+  install:
+    crds: CreateReplace
+  upgrade:
+    crds: CreateReplace
+  values:
+    crds:
+      enabled: true
+      keep: true
+    extraArgs:
+    - --dns01-recursive-nameservers=1.1.1.1:53
+    - --dns01-recursive-nameservers-only
+    cainjector:
+      replicaCount: 1
+    podDnsPolicy: "None"
+    podDnsConfig:
+      nameservers:
+      - "1.1.1.1"
+      - "8.8.8.8"
+    ingressShim:
+      defaultIssuerName: letsencrypt-production
+      defaultIssuerKind: ClusterIssuer
+      defaultIssuerGroup: cert-manager.io

@@ -1,0 +1,9 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- pvc-postgresql.yaml
+- pvc-tandoor-recipes.yaml
+- hr-postgresql.yaml
+- hr-tandoor-recipes.yaml
+- cm-nginx.yaml

@@ -1,0 +1,14 @@
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: cloudflared-app
+  namespace: flux-system
+spec:
+  path: ./apps/cloudflared
+  targetNamespace: networking
+  interval: 10m
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system

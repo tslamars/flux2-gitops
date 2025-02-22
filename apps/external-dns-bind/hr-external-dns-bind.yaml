@@ -1,0 +1,54 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: external-dns-bind
+spec:
+  interval: 5m
+  chart:
+    spec:
+      chart: external-dns
+      version: 1.15.2
+      sourceRef:
+        kind: HelmRepository
+        name: external-dns-charts
+        namespace: flux-system
+      interval: 5m
+  values:
+    env:
+      - name: EXTERNAL_DNS_RFC2136_ZONE
+        value: "${SECRET_DOMAIN}"
+      - name: EXTERNAL_DNS_RFC2136_HOST
+        valueFrom:
+          secretKeyRef:
+            name: external-dns-bind-secrets
+            key: bind_host
+      - name: EXTERNAL_DNS_RFC2136_PORT
+        valueFrom:
+          secretKeyRef:
+            name: external-dns-bind-secrets
+            key: bind_port
+      - name: EXTERNAL_DNS_RFC2136_TSIG_SECRET
+        valueFrom:
+          secretKeyRef:
+            name: external-dns-bind-secrets
+            key: bind_tsig_secret
+    resources:
+      requests:
+        memory: 100Mi
+        cpu: 25m
+      limits:
+        memory: 250Mi
+    logLevel: debug
+    sources:
+    - ingress
+    - service
+    policy: sync
+    # domainFilters:
+    # - "${SECRET_DOMAIN}"
+    provider: rfc2136
+    extraArgs:
+      - --rfc2136-tsig-secret-alg=hmac-sha512
+      - --rfc2136-tsig-keyname=external-dns-key
+      - --rfc2136-tsig-axfr
+      - --txt-prefix=txt-

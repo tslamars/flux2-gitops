@@ -1,0 +1,28 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: flux
+spec:
+  groups:
+    - name: flux
+      rules:
+        - alert: FluxComponentAbsent
+          annotations:
+            description: Flux component has disappeared from Prometheus target discovery.
+            summary: Flux component is down.
+          expr: |
+            absent(up{job=~".*flux-system.*"} == 1)
+          for: 5m
+          labels:
+            severity: critical
+        - alert: FluxReconciliationFailure
+          annotations:
+            description: '{{ $labels.kind }} {{ $labels.namespace }}/{{ $labels.name }} reconciliation has been failing
+              for more than ten minutes.'
+            summary: Flux reconciliation failure.
+          expr: |
+            max(gotk_resource_info{ready="False"}) by (namespace, name, kind) == 1
+          for: 10m
+          labels:
+            severity: critical

@@ -1,0 +1,60 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: descheduler
+spec:
+  interval: 5m
+  chart:
+    spec:
+      chart: descheduler
+      version: 0.32.2
+      sourceRef:
+        kind: HelmRepository
+        name: descheduler-charts
+        namespace: flux-system
+      interval: 5m
+  values:
+    kind: Deployment
+    deschedulerPolicy:
+      profiles:
+        - name: default
+          pluginConfig:
+            - name: DefaultEvictor
+              args:
+                ignorePvcPods: true
+                evictLocalStoragePods: true
+            - name: RemoveDuplicates
+            # - name: RemovePodsHavingTooManyRestarts
+            #   args:
+            #     podRestartThreshold: 100
+            #     includingInitContainers: true
+            - name: RemovePodsViolatingNodeAffinity
+              args:
+                nodeAffinityType:
+                - requiredDuringSchedulingIgnoredDuringExecution
+            - name: RemovePodsViolatingNodeTaints
+            - name: RemovePodsViolatingInterPodAntiAffinity
+            # - name: RemovePodsViolatingTopologySpreadConstraint
+            - name: LowNodeUtilization
+              args:
+                thresholds:
+                  cpu: 20
+                  memory: 20
+                  pods: 20
+                targetThresholds:
+                  cpu: 50
+                  memory: 50
+                  pods: 50
+          plugins:
+            balance:
+              enabled:
+                - RemoveDuplicates
+                # - RemovePodsViolatingTopologySpreadConstraint
+                - LowNodeUtilization
+            deschedule:
+              enabled:
+                # - RemovePodsHavingTooManyRestarts
+                - RemovePodsViolatingNodeTaints
+                - RemovePodsViolatingNodeAffinity
+                - RemovePodsViolatingInterPodAntiAffinity

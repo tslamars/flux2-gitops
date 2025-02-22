@@ -1,0 +1,79 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: immich
+spec:
+  interval: 5m
+  chart:
+    spec:
+      chart: app-template
+      version: 3.7.1
+      sourceRef:
+        kind: HelmRepository
+        name: bjw-s-charts
+        namespace: flux-system
+      interval: 5m
+  dependsOn:
+    - name: csi-driver-smb
+      namespace: kube-system
+    - name: ingress-nginx
+      namespace: networking
+    - name: immich-redis
+    - name: immich-postgresql
+  values:
+    controllers:
+      main:
+        containers:
+          main:
+            image:
+              repository: ghcr.io/immich-app/immich-server
+              tag: v1.126.1@sha256:f8a3c78ec0a0ace20517acedaab9c2f3edcfc9b96e03080ba401acf55792470e
+            env:
+              DB_HOSTNAME: immich-postgresql
+              DB_DATABASE_NAME: immich
+              DB_USERNAME: immich
+              DB_PASSWORD: "${SECRET_IMMICH_DB_PASSWORD}"
+              REDIS_HOSTNAME: immich-redis-master
+              IMMICH_LOG_LEVEL: verbose
+            probes:
+              liveness:
+                enabled: true
+              readiness:
+                enabled: true
+              startup:
+                enabled: true
+                spec:
+                  failureThreshold: 30
+                  periodSeconds: 5
+    service:
+      main:
+        controller: main
+        ports:
+          http:
+            port: 2283
+    ingress:
+      main:
+        className: "nginx-external"
+        annotations:
+          external-dns.alpha.kubernetes.io/target: "${SECRET_GATEWAY}"
+          kubernetes.io/tls-acme: "true"
+          nginx.ingress.kubernetes.io/auth-url: http://authelia.networking.svc.cluster.local/api/authz/auth-request
+          nginx.ingress.kubernetes.io/auth-signin: https://auth.${SECRET_DOMAIN}
+          nginx.ingress.kubernetes.io/proxy-body-size: "0"
+        hosts:
+        - host: immich.${SECRET_DOMAIN}
+          paths:
+          - path: /
+            service:
+              identifier: main
+              port: http
+        tls:
+        - secretName: immich-tls
+          hosts:
+          - immich.${SECRET_DOMAIN}
+    persistence:
+      data:
+        existingClaim: immich
+        globalMounts:
+          - path: /usr/src/app/upload

@@ -1,0 +1,220 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: arrs
+spec:
+  interval: 5m
+  chart:
+    spec:
+      chart: app-template
+      version: 3.7.1
+      sourceRef:
+        kind: HelmRepository
+        name: bjw-s-charts
+        namespace: flux-system
+      interval: 5m
+  dependsOn:
+    - name: ingress-nginx
+      namespace: networking
+    - name: csi-driver-smb
+      namespace: kube-system
+    - name: longhorn
+      namespace: longhorn-system
+    - name: pod-gateway-vpn
+      namespace: networking
+  values:
+    controllers:
+      radarr:
+        containers:
+          app:
+            image:
+              repository: ghcr.io/linuxserver/radarr
+              tag: 5.18.4@sha256:1184ee84bc5329c4f62c070a04d73eaf7918878410ca48a1f3dbf82b684eee27
+            env:
+              PUID: "1000"
+              PGID: "1000"
+              TZ: Etc/UTC
+              RADARR__AUTH__METHOD: External
+              RADARR__AUTH__REQUIRED: DisabledForLocalAddresses
+              RADARR__AUTH__APIKEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: arrs-secrets
+                    key: RADARR_API_KEY
+      sonarr:
+        containers:
+          app:
+            image:
+              repository: ghcr.io/linuxserver/sonarr
+              tag: 4.0.13@sha256:4dfedb2598dc6bd51c40f4ecea2631dbe367840678ab109cd968f821d81a5327
+            env:
+              PUID: "1000"
+              PGID: "1000"
+              TZ: Etc/UTC
+              SONARR__AUTH__METHOD: External
+              SONARR__AUTH__REQUIRED: DisabledForLocalAddresses
+              SONARR__AUTH__APIKEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: arrs-secrets
+                    key: SONARR_API_KEY
+      bazarr:
+        containers:
+          app:
+            image:
+              repository: ghcr.io/linuxserver/bazarr
+              tag: 1.5.1@sha256:e965b99701f05a7feaea59fa97c518dc6feb933fef0dbd6e7f5d7e0958b79885
+            env:
+              PUID: "1000"
+              PGID: "1000"
+              TZ: Etc/UTC
+              BAZARR__AUTH__METHOD: External
+              BAZARR__AUTH__REQUIRED: DisabledForLocalAddresses
+              BAZARR__AUTH__APIKEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: arrs-secrets
+                    key: SONARR_API_KEY
+      prowlarr:
+        containers:
+          app:
+            image:
+              repository: ghcr.io/linuxserver/prowlarr
+              tag: 1.31.2@sha256:761f73534a01aec4bf72a1396e9b9fda3f01632948b3fa31985982d26120a330
+            env:
+              PUID: "1000"
+              PGID: "1000"
+              TZ: Etc/UTC
+              PROWLARR__AUTH__METHOD: External
+              PROWLARR__AUTH__REQUIRED: DisabledForLocalAddresses
+      flaresolverr:
+        containers:
+          app:
+            image:
+              repository: ghcr.io/flaresolverr/flaresolverr
+              tag: v3.3.21@sha256:1a30e1ad6bb3df626bfe3b9735a6d60e208c475c89bf18be0db4d4b121a3cb0e
+    service:
+      radarr:
+        controller: radarr
+        ports:
+          http:
+            port: 7878
+      sonarr:
+        controller: sonarr
+        ports:
+          http:
+            port: 8989
+      bazarr:
+        controller: bazarr
+        ports:
+          http:
+            port: 6767
+      prowlarr:
+        controller: prowlarr
+        ports:
+          http:
+            port: 9696
+      flaresolverr:
+        controller: flaresolverr
+        ports:
+          http:
+            port: 8191
+    ingress:
+      main:
+        className: "nginx"
+        annotations:
+          kubernetes.io/tls-acme: "true"
+          nginx.ingress.kubernetes.io/auth-url: http://authelia.networking.svc.cluster.local/api/authz/auth-request
+          nginx.ingress.kubernetes.io/auth-signin: https://auth.${SECRET_DOMAIN}
+        hosts:
+        - host: radarr.${SECRET_DOMAIN}
+          paths:
+          - path: /
+            service:
+              identifier: radarr
+              port: http
+        - host: sonarr.${SECRET_DOMAIN}
+          paths:
+          - path: /
+            service:
+              identifier: sonarr
+              port: http
+        - host: bazarr.${SECRET_DOMAIN}
+          paths:
+          - path: /
+            service:
+              identifier: bazarr
+              port: http
+        - host: prowlarr.${SECRET_DOMAIN}
+          paths:
+          - path: /
+            service:
+              identifier: prowlarr
+              port: http
+        tls:
+        - secretName: radarr-tls
+          hosts:
+          - radarr.${SECRET_DOMAIN}
+        - secretName: sonarr-tls
+          hosts:
+          - sonarr.${SECRET_DOMAIN}
+        - secretName: bazarr-tls
+          hosts:
+          - bazarr.${SECRET_DOMAIN}
+        - secretName: prowlarr-tls
+          hosts:
+          - prowlarr.${SECRET_DOMAIN}
+    persistence:
+      media:
+        existingClaim: arrs-media
+        advancedMounts:
+          radarr:
+            app:
+              - path: "/movies"
+                subPath: movies
+          sonarr:
+            app:
+              - path: "/tv"
+                subPath: tv
+          bazarr:
+            app:
+              - path: "/movies"
+                subPath: movies
+              - path: "/tv"
+                subPath: tv
+      downloads:
+        existingClaim: arrs-downloads
+        advancedMounts:
+          radarr:
+            app:
+              - path: "/downloads"
+                subPath: ""
+          sonarr:
+            app:
+              - path: "/downloads"
+                subPath: ""
+      radarr:
+        existingClaim: radarr-data
+        advancedMounts:
+          radarr:
+            app:
+              - path: "/config"
+      sonarr:
+        existingClaim: sonarr-data
+        advancedMounts:
+          sonarr:
+            app:
+              - path: "/config"
+      bazarr:
+        existingClaim: bazarr-data
+        advancedMounts:
+          bazarr:
+            app:
+              - path: "/config"
+      prowlarr:
+        existingClaim: prowlarr-data
+        advancedMounts:
+          prowlarr:
+            app:
+              - path: "/config"
