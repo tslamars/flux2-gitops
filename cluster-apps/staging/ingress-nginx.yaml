@@ -1,3 +1,4 @@
+---
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
@@ -16,6 +17,4 @@ spec:
           namespace: networking
         spec:
           issuerRef:
-            name: selfsigned-issuer  # Change from letsencrypt-staging
-            kind: ClusterIssuer     # Assuming a cluster-wide issuer
-          secretName: "${SECRET_DOMAIN/./-}-tls"  # Optional: explicit secret name
+            name: letsencrypt-staging
