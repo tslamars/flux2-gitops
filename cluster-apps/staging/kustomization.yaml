@@ -4,7 +4,7 @@ kind: Kustomization
 resources:
 - ../namespaces.yaml
 # - ../arrs.yaml
-- ../authelia.yaml
+# - ../authelia.yaml
 # - ../bind9.yaml
 # - ../blocky.yaml
 - ../certificate-exporter.yaml
@@ -15,12 +15,12 @@ resources:
 # - ../external-dns-bind.yaml
 # - ../external-dns-cloudflare.yaml
 - ../flux-system.yaml
-- ../goldilocks.yaml
-- ../homer.yaml
-- ../immich.yaml
+# - ../goldilocks.yaml
+# - ../homer.yaml
+# - ../immich.yaml
 - ../ingress-nginx.yaml
 - ../ingress-nginx-external.yaml
-- ../jd2.yaml
+# - ../jd2.yaml
 # - ../jellyfin.yaml
 # - ../jellyseerr.yaml
 # - ../kube-prometheus-stack.yaml
