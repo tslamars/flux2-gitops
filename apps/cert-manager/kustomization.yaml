@@ -5,3 +5,4 @@ resources:
 - ns-cert-manager.yaml
 - secret-cert-manager.sops.yaml
 - hr-cert-manager.yaml
+- selfsigned-issuer.yaml
