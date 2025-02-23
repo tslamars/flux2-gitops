@@ -8,7 +8,7 @@ spec:
   interval: 1m
   ref:
     branch: main
-  url: ssh://git@github.com/Pumba98/flux2-gitops
+  url: ssh://git@github.com:tslamars/flux2-gitops.git
   secretRef:
     name: flux-system
 ---
