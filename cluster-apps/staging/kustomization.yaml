@@ -11,11 +11,11 @@ resources:
 - ../cert-manager.yaml
 # - ../cloudflared.yaml
 - ../csi-driver-smb.yaml
-- ../descheduler.yaml
+# - ../descheduler.yaml
 # - ../external-dns-bind.yaml
 # - ../external-dns-cloudflare.yaml
 - ../flux-system.yaml
-- ../goldilocks.yaml
+# - ../goldilocks.yaml
 # - ../homer.yaml
 # - ../immich.yaml
 - ../ingress-nginx.yaml
@@ -28,7 +28,7 @@ resources:
 # - ../kured.yaml
 # - ../linkwarden.yaml
 # - ../loki.yaml
-- ../longhorn.yaml
+# - ../longhorn.yaml
 #- ../memos.yaml
 - ../metallb.yaml
 - ../metrics-server.yaml
@@ -38,7 +38,7 @@ resources:
 # - ../promtail.yaml
 # - ../qbittorrent.yaml
 # - ../radicale.yaml
-- ../rancher.yaml
+# - ../rancher.yaml
 # - ../reloader.yaml
 # - ../restic.yaml
 # - ../sftpgo.yaml
@@ -48,5 +48,5 @@ resources:
 # - ../weave-gitops.yaml
 
 patchesStrategicMerge:
-- longhorn.yaml
-# - ingress-nginx.yaml
+# - longhorn.yaml
+- ingress-nginx.yaml
