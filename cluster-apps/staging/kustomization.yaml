@@ -41,10 +41,10 @@ resources:
 - ../rancher.yaml
 - ../reloader.yaml
 # - ../restic.yaml
-- ../sftpgo.yaml
+# - ../sftpgo.yaml
 # - ../syncthing.yaml
 #- ../system-upgrade-controller.yaml
-- ../tandoor-recipes.yaml
+# - ../tandoor-recipes.yaml
 # - ../weave-gitops.yaml
 
 patchesStrategicMerge:
