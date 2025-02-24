@@ -26,5 +26,5 @@ spec:
         # No Authelia or external annotations needed
       tls:
         source: secret
-        secretName: ingress-nginx-tls  # Self-signed cert Secret
+        secretName: "${SECRET_DOMAIN/./-}-tls"  # Self-signed cert Secret
     bootstrapPassword: "${SECRET_RANCHER_ADMIN_PASSWORD}"
