@@ -1,0 +1,15 @@
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: ingress-nginx-cert
+  namespace: networking
+spec:
+  secretName: ingress-nginx-tls  # Matches Rancher and ingress-nginx expectation
+  dnsNames:
+    - "rancher.${SECRET_DOMAIN}"  # e.g., rancher.example.local
+    - "*.${SECRET_DOMAIN}"       # Wildcard for other services (optional)
+  issuerRef:
+    name: selfsigned-issuer
+    kind: ClusterIssuer
+    group: cert-manager.io
