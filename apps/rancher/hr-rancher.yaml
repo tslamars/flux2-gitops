@@ -14,20 +14,17 @@ spec:
         name: rancher-latest
         namespace: flux-system
   dependsOn:
-    - name: ingress-nginx-external
+    - name: ingress-nginx  # Matches your deployed ingress-nginx
       namespace: networking
   values:
     replicas: 1
-    hostname: rancher.${SECRET_DOMAIN}
+    hostname: rancher.${SECRET_DOMAIN}  # e.g., rancher.example.local
     tls: ingress
     ingress:
-      ingressClassName: nginx-external
+      ingressClassName: nginx  # Confirmed by your output
       extraAnnotations:
-        external-dns.alpha.kubernetes.io/target: "${SECRET_GATEWAY}"
-        kubernetes.io/tls-acme: "true"
-        nginx.ingress.kubernetes.io/auth-url: http://authelia.networking.svc.cluster.local/api/authz/auth-request
-        nginx.ingress.kubernetes.io/auth-signin: https://auth.${SECRET_DOMAIN}
+        # No Authelia or external annotations needed
       tls:
         source: secret
-        secretName: rancher-tls
+        secretName: ingress-nginx-tls  # Self-signed cert Secret
     bootstrapPassword: "${SECRET_RANCHER_ADMIN_PASSWORD}"

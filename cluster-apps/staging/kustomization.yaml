@@ -38,7 +38,7 @@ resources:
 # - ../promtail.yaml
 # - ../qbittorrent.yaml
 # - ../radicale.yaml
-# - ../rancher.yaml
+- ../rancher.yaml
 # - ../reloader.yaml
 # - ../restic.yaml
 # - ../sftpgo.yaml
