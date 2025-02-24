@@ -42,6 +42,7 @@ spec:
       config:
         ssl-protocols: "TLSv1.3 TLSv1.2"
         proxy-body-size: "100m"
+        ssl-redirect: "false"  # Added here to disable HTTP-to-HTTPS redirect
       metrics:
         enabled: true
         serviceMonitor:
