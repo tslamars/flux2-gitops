@@ -6,7 +6,7 @@ resources:
 # - ../arrs.yaml
 - ../authelia.yaml
 - ../bind9.yaml
-- ../blocky.yaml
+#- ../blocky.yaml
 - ../certificate-exporter.yaml
 - ../cert-manager.yaml
 # - ../cloudflared.yaml
